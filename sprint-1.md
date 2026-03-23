@@ -1,78 +1,64 @@
-# Sprint 1: Android app v1 (foundation)
+# Sprint 1
 
-**Timebox:** (set dates)  
-**Sprint goal:** Ship a credible **Android-first** Pixiserve companion: sign in, browse server library, and run **reliable manual backup** from device photos/videos toward PRD §11.2 / roadmap path to v0.3 Mobile GA.
+## 1. Sprint Goal
 
-**Product context:** [product.md](../product/product.md) — v0.1 foundation on server; mobile’s v1 role is background-oriented sync; risks call out **resumable uploads** and **correct hashing**.
+Ship the **v0.2 foundation**: Clerk-backed authentication end-to-end on API, web, and mobile (JWT verification, verified webhooks, local user sync, first-user admin), harden **album share-link passwords** with bcrypt, **enforce storage quotas** on upload, and land **thumbnail generation** plus **PostgreSQL trigram full-text search** so the stack matches the v0.2 roadmap in `pinion/product/product.md`.
 
----
+## 2. In-Scope Chains
 
-## Current state (codebase snapshot)
 
-- **Tabs:** Photos (server gallery), Settings (account + backup/sync controls).
-- **Auth / API:** JWT + configurable `serverUrl` (`mobile/src/services/api.ts`, `authStore`).
-- **Sync:** `syncService.ts` scans MediaLibrary, batches hash check via `POST /sync/check`, uploads via `POST /assets`; WiFi-only and video toggles in `syncStore`; **hashing reads whole file as base64** (memory risk, noted in code comments).
-- **Gaps:** `registerDevice()` uses placeholders for device name / id / platform; no true background task scheduling documented in-sprint; failed uploads are logged but not retried as a queue; PRD risk on interrupted uploads still open.
+| Chain                              | Targets                   | Outcome                                            |
+| ---------------------------------- | ------------------------- | -------------------------------------------------- |
+| Clerk auth (API → web → mobile)    | PIN-001 → PIN-006         | FR-AUTH-01,03,06,09,10 and aligned `/me` + clients |
+| Storage & media                    | PIN-007, PIN-009, PIN-010 | FR-AUTH-07 enforcement; FR-ASSET-03; FR-SRCH-05    |
+| Security hardening (parallel root) | PIN-008                   | NFR: bcrypt share passwords before broader release |
 
----
 
-## In scope
+## 3. Deferred Work
 
-1. **Android v1 usability:** Polish login → server URL → gallery → settings flow for daily dogfooding on a physical device or emulator.
-2. **Backup correctness:** Replace or constrain hashing so large photos/videos do not load entirely into memory; align with server dedup (SHA256) semantics.
-3. **Device identity:** Real Android device id / name / `device_type` for `POST /sync/devices` so sync metadata is traceable.
-4. **Failure handling (minimal):** Surface upload failures in UI; persist a small “failed items” or retry hint so one flaky upload does not look like success.
+- OCR (FR-ML-10), family library mode (FR-ALB-07), hierarchical tag taxonomy UI (FR-ML-09), encryption at rest, pgvector migration, Kubernetes Helm — later phases per roadmap.
+- Clerk JWKS caching / outage degradation — document or thin follow-up unless blocking MVP sign-in.
 
-## Out of scope (defer)
+## 4. Critical Path
 
-- Play Store / internal track release mechanics (track under “release prep” spike if needed).
-- iOS parity (Expo project supports it; treat as follow-up sprint unless capacity appears).
-- True OS-level background sync / foreground service (Expo constraints — spike only if sprint goal shifts).
-- Offline gallery of **local** thumbnails only (PRD v0.3 “offline gallery view”).
+`PIN-001` → `PIN-002` → `PIN-003` → `PIN-004` → `PIN-005` → `PIN-006` (full Clerk vertical slice).
 
----
+Secondary path for search quality: `PIN-004` → `PIN-009` → `PIN-010`.
 
-## User stories
+## 5. Root Targets
 
-| ID | Story | Acceptance criteria (high level) |
-|----|--------|-----------------------------------|
-| S1-01 | As a user, I connect to my server and sign in. | Valid server URL, login/register, token stored, errors shown clearly. |
-| S1-02 | As a user, I see my server library on Android. | Grid loads, pull-to-refresh, pagination; thumbnail URLs work with auth if required by API. |
-| S1-03 | As a user, I back up new photos to Pixiserve. | Grant media permission; “Sync now” uploads only **missing** hashes per server; progress and completion state visible. |
-| S1-04 | As a user, I control when backup runs. | WiFi-only toggle respected; optional video sync toggle respected. |
-| S1-05 | As an operator, I can identify the device on the server. | Device registration sends stable id + real model/name + `android` platform. |
+- **PIN-001** — Clerk configuration and API JWT verification (JWKS / Clerk SDK).
+- **PIN-008** — Bcrypt hashing for album share-link passwords (independent security track).
 
----
+## 6. Risks
 
-## Technical tasks (suggested order)
 
-1. **Hashing:** Implement chunked SHA256 (or documented native approach) in `syncService.ts`; verify against backend dedup expectations.
-2. **Device registration:** Wire `expo-application` / `expo-device` (or platform APIs) in `registerDevice()`; call from post-login path if API requires it.
-3. **Upload reliability (v1):** After failed `POST /assets`, increment visible error state; optional: queue retries for N attempts or expose “retry failed” in Settings.
-4. **UX hardening:** Loading/empty/error states on Photos tab; confirm thumbnail auth headers if 401s appear on image URLs.
-5. **QA checklist:** Large library (500+ items), video on/off, WiFi-only toggle, airplane mode mid-sync, server unreachable.
+| Risk                                              | Mitigation                                                                       |
+| ------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Clerk outage / JWKS fetch failures                | Short TTL cache in follow-up; document required env vars and health expectations |
+| Breaking existing local-auth users during cutover | Feature-flag or staged removal; migration notes in target proofs                 |
+| Thumbnail pipeline load                           | Celery concurrency and idempotent jobs; reuse existing worker patterns           |
+| FTS migration on large DB                         | Alembic migration with concurrent index strategy if needed                       |
 
----
 
-## Definition of Done
+## 7. Owner-Class Summary
 
-- Stories S1-01–S1-05 satisfied on **Android** with a running stack from `deploy/docker-compose.dev.yml` (or equivalent).
-- No known crashers on sync path for common image sizes; memory use acceptable during hash phase (document test device if possible).
-- Sprint retro notes captured (what to carry to Sprint 2: background tasks, resumable uploads, iOS).
+All sprint targets use `**owner_class`: `default`** (single full-stack executor per repo config). Split backend vs frontend `owner_class` later if the team adds agents.
 
----
+## Target index
 
-## Risks & dependencies
 
-| Risk | Mitigation |
-|------|------------|
-| Large-file hash memory | Chunked reads + streaming digest; cap concurrent hashing if needed. |
-| Expo background limits | Keep “manual sync” as primary v1 path; document follow-up for `expo-task-manager` / native module. |
-| Server API drift | Reconcile `mobile/src/services/api.ts` with `backend/app/api/v1/sync.py` and assets upload contract before locking AC. |
+| ID      | Depends on | Summary                                               |
+| ------- | ---------- | ----------------------------------------------------- |
+| PIN-001 | —          | Clerk env/settings + API JWT verification             |
+| PIN-002 | PIN-001    | Clerk webhook + Svix signature verification           |
+| PIN-003 | PIN-002    | Local `User` sync + first-user admin                  |
+| PIN-004 | PIN-003    | Remove legacy local auth; Clerk-only `/me` and guards |
+| PIN-005 | PIN-004    | Web: `@clerk/clerk-react` + API token injection       |
+| PIN-006 | PIN-005    | Mobile: `@clerk/clerk-expo` + Google/Apple            |
+| PIN-007 | PIN-004    | Enforce `storage_quota_bytes` on upload               |
+| PIN-008 | —          | Bcrypt album share-link passwords                     |
+| PIN-009 | PIN-004    | Thumbnail/preview pipeline (Celery, WebP)             |
+| PIN-010 | PIN-009    | Full-text search (pg_trgm)                            |
 
----
 
-## Sprint backlog hygiene
-
-- Move concrete feature ideas from [ideas.md](../backlog/ideas.md) only when they map to a sprint goal.
-- Update [system.md](../architecture/system.md) when mobile sync flow stabilizes (sequence: client ↔ API ↔ worker).

@@ -1,0 +1,1 @@
+See pinion/AGENTS.md
