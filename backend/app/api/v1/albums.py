@@ -10,19 +10,21 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import CurrentUser
 from app.database import get_db
 from app.models import Album, AlbumAsset, AlbumShare, AlbumType, ShareType, Asset
+from app.services.share_link_password import hash_link_password
 
 router = APIRouter()
 
 
 class AlbumCreate(BaseModel):
     """Album creation request."""
+
     title: str
     description: str | None = None
     album_type: AlbumType = AlbumType.STANDARD
@@ -31,6 +33,7 @@ class AlbumCreate(BaseModel):
 
 class AlbumUpdate(BaseModel):
     """Album update request."""
+
     title: str | None = None
     description: str | None = None
     cover_asset_id: UUID | None = None
@@ -39,6 +42,7 @@ class AlbumUpdate(BaseModel):
 
 class AlbumResponse(BaseModel):
     """Album response model."""
+
     id: UUID
     title: str
     description: str | None
@@ -53,30 +57,42 @@ class AlbumResponse(BaseModel):
 
 class AlbumListResponse(BaseModel):
     """Paginated album list."""
+
     items: list[AlbumResponse]
     total: int
 
 
 class AddAssetsRequest(BaseModel):
     """Request to add assets to album."""
+
     asset_ids: list[UUID]
 
 
 class ShareLinkCreate(BaseModel):
     """Create share link request."""
+
     password: str | None = None
     expires_at: datetime | None = None
     can_download: bool = True
 
+    @field_validator("password", mode="before")
+    @classmethod
+    def empty_password_to_none(cls, v: str | None) -> str | None:
+        if v == "":
+            return None
+        return v
+
 
 class ShareLinkResponse(BaseModel):
     """Share link response."""
+
     id: UUID
     share_token: str
     share_url: str
     expires_at: datetime | None
     can_download: bool
     view_count: int
+    has_password: bool = False
 
 
 @router.post("", response_model=AlbumResponse, status_code=status.HTTP_201_CREATED)
@@ -120,8 +136,7 @@ async def list_albums(
 
     # Paginate
     query = (
-        query
-        .order_by(Album.sort_order.asc(), Album.created_at.desc())
+        query.order_by(Album.sort_order.asc(), Album.created_at.desc())
         .offset((page - 1) * page_size)
         .limit(page_size)
     )
@@ -210,7 +225,9 @@ async def get_album_assets(
 
     if album.album_type == AlbumType.SMART and album.smart_criteria:
         # Smart album - execute criteria query
-        return await _get_smart_album_assets(db, current_user.id, album.smart_criteria, page, page_size)
+        return await _get_smart_album_assets(
+            db, current_user.id, album.smart_criteria, page, page_size
+        )
 
     # Standard album
     query = (
@@ -314,9 +331,12 @@ async def add_assets_to_album(
         raise HTTPException(status_code=400, detail="Cannot manually add to smart albums")
 
     # Get max position
-    max_pos = await db.scalar(
-        select(func.max(AlbumAsset.position)).where(AlbumAsset.album_id == album_id)
-    ) or 0
+    max_pos = (
+        await db.scalar(
+            select(func.max(AlbumAsset.position)).where(AlbumAsset.album_id == album_id)
+        )
+        or 0
+    )
 
     added = 0
     for i, asset_id in enumerate(request.asset_ids):
@@ -402,7 +422,7 @@ async def create_share_link(
         album_id=album_id,
         share_type=ShareType.LINK,
         share_token=share_token,
-        link_password=request.password,  # Should be hashed in production
+        link_password=hash_link_password(request.password),
         expires_at=request.expires_at,
         can_download=request.can_download,
     )
@@ -417,6 +437,7 @@ async def create_share_link(
         expires_at=share.expires_at,
         can_download=share.can_download,
         view_count=share.view_count,
+        has_password=share.link_password is not None,
     )
 
 
@@ -447,6 +468,7 @@ async def list_album_shares(
             expires_at=s.expires_at,
             can_download=s.can_download,
             view_count=s.view_count,
+            has_password=s.link_password is not None,
         )
         for s in shares
     ]
