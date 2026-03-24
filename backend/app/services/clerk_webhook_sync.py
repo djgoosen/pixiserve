@@ -1,4 +1,11 @@
-"""Apply Clerk `user.*` webhook payloads to local users (idempotent upsert)."""
+"""Apply Clerk `user.*` webhook payloads to local users (idempotent upsert).
+
+FR-AUTH-02 (first admin): the first **local** ``User`` row created from Clerk data
+(when ``get_user_count()`` is ``0`` immediately before insert) receives ``is_admin=True``.
+Every later insert gets ``is_admin=False``. This matches a homelab pattern where the
+first person to hit Clerk sign-up becomes the Pixiserve admin; it is deterministic
+and independent of Clerk dashboard role APIs.
+"""
 
 from __future__ import annotations
 
@@ -84,6 +91,7 @@ async def upsert_user_from_clerk_data(db: AsyncSession, user_data: dict[str, Any
         return existing
 
     username = await allocate_unique_username(db, username_base)
+    # FR-AUTH-02: only the first row in `users` at insert time is admin (see module docstring).
     count = await get_user_count(db)
     user = User(
         username=username,

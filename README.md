@@ -56,6 +56,7 @@ Health checks **`/health`**, **`/api/v1/health`**, and **`/api/v1/health/ready`*
 - **Endpoint:** `POST /api/v1/webhooks/clerk`
 - **Signing:** Svix headers `svix-id`, `svix-timestamp`, `svix-signature` (verified with **`CLERK_WEBHOOK_SECRET`**).
 - **Handled types:** `user.created`, `user.updated` (idempotent upsert by Clerk user id → `users.clerk_user_id`).
+- **FR-AUTH-02:** The first local `User` row created via this sync (empty `users` table) gets `is_admin=true`; later sign-ups do not.
 
 ## Development
 
