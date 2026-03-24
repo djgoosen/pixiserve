@@ -40,7 +40,7 @@ Self-hosted Google Photos replacement with ML-powered organization.
 
 5. After [Clerk](https://clerk.com) is configured, sign in via the web or mobile app. The API expects a **Clerk session JWT** on protected routes. Each user row must have `clerk_user_id` set (via Clerk webhook sync — see sprint backlog) before `/api/v1/auth/me` and other protected endpoints succeed.
 
-6. Legacy `POST /api/v1/auth/register` and `/login` may still exist for migration tooling but **protected routes** authenticate with Clerk only.
+6. **Local password auth is off by default.** `POST /api/v1/auth/login`, `/register`, and `/change-password` return **403** unless you set **`ALLOW_LOCAL_PASSWORD_AUTH=true`** (development or one-off migration only). Session tokens for the API are **Clerk session JWTs** only in normal operation.
 
 ## API authentication (Clerk)
 
@@ -48,6 +48,7 @@ Self-hosted Google Photos replacement with ML-powered organization.
 - **CLERK_PUBLISHABLE_KEY** — Publishable key for the React / Expo Clerk SDKs (required at startup so deploys are documented consistently; not used to verify Bearer tokens).
 - **Bearer tokens** — The API validates `Authorization: Bearer <session_jwt>` with **RS256** using Clerk’s JWKS URL derived from the JWT `iss` claim: `{iss}/.well-known/jwks.json`.
 - **Local user** — The JWT `sub` (Clerk user id) must match `users.clerk_user_id` in the database.
+- **`ALLOW_LOCAL_PASSWORD_AUTH`** — Default `false`. When `true`, legacy HS256 tokens from `/auth/login` and `/auth/register` are issued again; keep `false` in production so there is no parallel password-based session path.
 
 Health checks **`/health`**, **`/api/v1/health`**, and **`/api/v1/health/ready`** stay unauthenticated.
 

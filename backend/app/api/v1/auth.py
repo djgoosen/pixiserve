@@ -25,7 +25,20 @@ from app.services.auth_service import (
 )
 
 router = APIRouter()
-settings = get_settings()
+
+_LOCAL_AUTH_DISABLED_DETAIL = (
+    "Local username/password authentication is disabled. Sign in with Clerk and send "
+    "the Clerk session JWT as Bearer token. For development or migration only, set "
+    "ALLOW_LOCAL_PASSWORD_AUTH=true (not for production)."
+)
+
+
+def _require_local_password_auth() -> None:
+    if not get_settings().allow_local_password_auth:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=_LOCAL_AUTH_DISABLED_DETAIL,
+        )
 
 
 @router.post("/register", response_model=LoginResponse, status_code=status.HTTP_201_CREATED)
@@ -34,6 +47,8 @@ async def register(
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     """Register a new user account."""
+    _require_local_password_auth()
+    settings = get_settings()
     # Check if registration is allowed
     if not settings.allow_registration:
         raise HTTPException(
@@ -87,6 +102,7 @@ async def login(
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
     """Login with username/email and password."""
+    _require_local_password_auth()
     user = await authenticate_user(db, credentials.username, credentials.password)
 
     if not user:
@@ -125,7 +141,8 @@ async def change_user_password(
     current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ):
-    """Change current user's password."""
+    """Change the locally stored password hash (only when local password auth is enabled)."""
+    _require_local_password_auth()
     success = await change_password(
         db=db,
         user=current_user,

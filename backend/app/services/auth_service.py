@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
 import bcrypt
-from jose import JWTError, jwt
+from jose import jwt
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -39,9 +39,7 @@ async def get_user_by_email(db: AsyncSession, email: str) -> User | None:
 
 async def get_user_by_username_or_email(db: AsyncSession, identifier: str) -> User | None:
     """Get user by username or email."""
-    stmt = select(User).where(
-        or_(User.username == identifier, User.email == identifier)
-    )
+    stmt = select(User).where(or_(User.username == identifier, User.email == identifier))
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
@@ -105,22 +103,6 @@ def create_access_token(user_id: UUID) -> tuple[str, int]:
     )
 
     return encoded_jwt, int(expires_delta.total_seconds())
-
-
-def decode_access_token(token: str) -> UUID | None:
-    """Decode and validate a JWT access token."""
-    try:
-        payload = jwt.decode(
-            token,
-            settings.secret_key,
-            algorithms=[settings.jwt_algorithm],
-        )
-        user_id = payload.get("sub")
-        if user_id is None:
-            return None
-        return UUID(user_id)
-    except JWTError:
-        return None
 
 
 async def get_user_by_id(db: AsyncSession, user_id: UUID) -> User | None:

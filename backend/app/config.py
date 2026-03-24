@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     # Registration
     allow_registration: bool = True  # Set to False after creating admin
 
+    # Legacy local JWT login/register (disabled by default; use Clerk session JWTs)
+    allow_local_password_auth: bool = False
+
     # Clerk (session JWT verification on the API; publishable key is for frontends)
     clerk_secret_key: str = ""
     clerk_publishable_key: str = ""
