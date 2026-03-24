@@ -35,6 +35,8 @@ services:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-pixiserve}:${POSTGRES_PASSWORD:-pixiserve}@db:5432/${POSTGRES_DB:-pixiserve}
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY:-}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY:-}
+      - CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY:-}
       - STORAGE_TYPE=${STORAGE_TYPE:-local}
       - STORAGE_PATH=/data/photos
       - S3_ENDPOINT=${S3_ENDPOINT:-}
