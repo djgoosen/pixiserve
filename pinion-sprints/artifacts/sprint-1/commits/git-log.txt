@@ -1,0 +1,58 @@
+# git log (Pinion retro)
+
+- max commits: 50
+- range: `HEAD` ancestry (newest first)
+- repo root: `/Users/daniel/Documents/Code/pinion-demos/pixiserve/pinion`
+
+---
+
+d7da5ec217aae1bc117b589a22ac6653480b9ea1 2026-03-24T05:34:25-07:00 chore(pinion): release PIN-010 and refresh graph/views
+e85c776c81dab330866a6ac7cd6192acbfd29ad7 2026-03-24T05:18:34-07:00 chore(pinion): release PIN-007 and PIN-009; refresh graph/views
+2f4f8e90258db79b21e60fdddf69655912e8db31 2026-03-23T20:15:48-07:00 chore(pinion): PIN-006 released; refresh graph and frontier after merge
+ddf51abf8f4366f209d45eab279ba77f17c5cd37 2026-03-23T20:15:01-07:00 chore(pinion): PIN-006 in review; sprint-1 graph refresh and backlog trim
+c4d1a001524b3521efd4902a62292b009c5b649e 2026-03-23T19:51:47-07:00 PIN-005: released after pixiserve merge; refresh graph and frontier.
+10bf6987850a0af763df0af7c65984dd29d8e70c 2026-03-23T19:43:30-07:00 PIN-004: released after pixiserve merge; refresh graph and frontier.
+16d7a3fc663782501984deac6aa55f036729f119 2026-03-23T19:39:23-07:00 PIN-003: released after pixiserve merge; merge stats and target view.
+748ad39c319f47e9069de91ee4bcfa3451e1a834 2026-03-23T19:33:34-07:00 Complete branch-merge for PIN-002: released; refresh graph and frontier on main.
+dcc312999cd259ad6be88bb1be1925f57a866cc2 2026-03-23T19:27:41-07:00 Complete branch-merge for PIN-001: released, graph and frontier refreshed on main.
+dc5677d1c5040e2e74d93ed54d90550e18d674f4 2026-03-23T06:10:25-07:00 fix
+1a312ee21581494b8b9c14ad4672f1b724e0210d 2026-03-22T10:42:15-07:00 sprint 21 wrap
+6ac25e8786024017074b499f98a4dcb0341f21ba 2026-03-22T10:29:27-07:00 sprint 21 wrap
+8ad201313cee1de14e2187310f5eb83a011e51af 2026-03-22T10:18:20-07:00 PIN-119: merged/released state and views refresh
+f83925cb399e3788b4b61117969a58ac0426415a 2026-03-22T10:17:50-07:00 PIN-119: transition to review (views refresh)
+a8e078a53a334ec47bee68edbccc07f8e4f4199d 2026-03-22T10:17:36-07:00 PIN-119: subprocess test for pinion retro PB-1 bundle
+bac544d63a619b5c5f5500216195294e395bbcd3 2026-03-22T10:16:03-07:00 PIN-118: merged/released state and views refresh
+4014ca7b2077c19a8f304bee0b1e467c14ce4720 2026-03-22T10:15:19-07:00 PIN-118: transition to review (views refresh)
+95962e696590fd42598e01b1202f855bf2ccff2d 2026-03-22T10:15:06-07:00 PIN-118: retro bundle tests for absent vs empty retro block
+bfc43e6bb1524d6925a389d1bf66e73eab9f13a3 2026-03-22T10:14:02-07:00 PIN-117: merged/released state and views refresh
+e11557cfb8367f93652b4b1c73e81cc32510fd61 2026-03-22T10:13:29-07:00 PIN-117: transition to review (views refresh)
+c1fc9d0a740af275e862bcc3d4d37b6b1a3637dc 2026-03-22T10:13:15-07:00 PIN-117: document retro emit bundle in AGENTS; cross-link docs
+af990225b5ba80fdaf556bf3700c4907c6d9f49c 2026-03-22T10:10:40-07:00 PIN-116: merged/released state and views refresh
+9979dc41ead98244751991407f5d8d3db230f9f0 2026-03-22T10:09:43-07:00 PIN-116: transition to review (views refresh)
+be1baad582bd2f57d555107753b4e5e6d7f6b836 2026-03-22T10:09:29-07:00 PIN-116: retro optional quiet pytest summary artifact
+b3dd42c5e313e55372fa2bf5cfe69ce3360cbad4 2026-03-22T10:03:27-07:00 PIN-115: merged/released state and views refresh
+1f7926a8de2c009d12172ecf3d4f29b52e0fc531 2026-03-22T10:02:59-07:00 PIN-115: transition to review (views refresh)
+b2bdcf429ee67d4c6724f1d9899e76bafa744476 2026-03-22T10:02:45-07:00 PIN-115: retro git log, diff.patch, README fallback
+4434f4551b9313d7e420bbb9ee58ff5ee8fdc2fe 2026-03-22T09:57:20-07:00 PIN-114: merged/released state and views refresh
+1c6197f4b32ba2efd640c81168490b58c6b32a96 2026-03-22T09:56:51-07:00 PIN-114: transition to review (views refresh)
+5f39b4a0feb8edf01474720ed63d0e94b21c1a7c 2026-03-22T09:56:26-07:00 PIN-114: emit retro PB-1 core artifacts when retro.enabled
+51d4aa5ec77d30ffac116c7e4634327d549f5e4a 2026-03-22T09:50:34-07:00 PIN-113: merged/released state and views refresh
+ae2883e8622ea98948828bb623b331200a182ac5 2026-03-22T09:50:01-07:00 PIN-113: transition to review (views refresh)
+794bc454ae2a8606198d7cec8b26e763a9cbc125 2026-03-22T09:49:44-07:00 PIN-113: parse retro artifact settings from config
+c74d48e1456d92d5f52271dba25c53946b3a188c 2026-03-22T09:47:09-07:00 PIN-112: merged/released state and views refresh
+0f6aecf994becaf9fad17b2851e7670761ea5342 2026-03-22T09:46:33-07:00 PIN-112: transition to review (graph/views refresh)
+aef2183aa7c4267a08faba0a5ec684c96ee7b890 2026-03-22T09:46:10-07:00 PIN-112: add retro PB-1 emit spec; cross-link stats ingest doc
+5a1710904bc26cbf9bba6dc164a04fd591e92bca 2026-03-22T09:41:05-07:00 sprint 20 wrap
+f31d9b2032772ec005af53ad394d94aac39d227a 2026-03-22T09:27:13-07:00 PIN-111: merged/released — refresh graph, append merge stats record
+fd60e409577a1ee2f83345b57707b69f43d1c722 2026-03-22T09:26:46-07:00 PIN-111: record manual pinion stats verification (sprint-20 §8)
+f968a3e6c5ed3c399510e6e305e35b97756b98c5 2026-03-22T09:25:15-07:00 PIN-110: merged/released — refresh graph, append merge stats record
+35c9e6f797e5c044a9213490ac07c54ac4e23ea3 2026-03-22T09:24:47-07:00 PIN-110: human pinion stats section for artifact_capture
+415b1206cb75ac6ce0b862abef6f64fc7513b70b 2026-03-22T09:22:19-07:00 PIN-109: merged/released — refresh graph, append merge stats record
+b59f2cae78c38acc0aa3d2a3d78904584c7c5317 2026-03-22T09:21:51-07:00 PIN-109: stats.artifact_capture_files loader for pinion stats report
+3333acaebf6916498e67a69d15a5847b1c661847 2026-03-22T09:16:33-07:00 PIN-108: merged/released — refresh graph, append merge stats record
+1217557f6a0252f0cad539f952ffee31a7e16322 2026-03-22T09:15:56-07:00 PIN-108: label merge stats as estimated input tokens (JSON key unchanged)
+69db37d8e6e06a33bc7b8b159ed7c2c7cd714f0b 2026-03-22T09:10:12-07:00 PIN-107: merged/released — refresh graph, append merge stats record
+10e0f3f62e5d245cb058243a61698e4919afac2b 2026-03-22T09:09:46-07:00 PIN-107: stats report pathspec rollups + merge_mirror JSONL slice
+bb279b297049c01473985014fed04f667a7e957f 2026-03-22T09:00:31-07:00 PIN-106: merged/released — refresh graph, append merge stats record
+b8d8e1c84c23a2acc0890ccdbbb66afa1393c8b6 2026-03-22T09:00:03-07:00 PIN-106: optional stats.git_line_stats_paths and merge_stats_mirror_path
+03cdaf6df25826144da7c0f993943c267bd98e40 2026-03-22T08:54:51-07:00 PIN-105: merged/released — refresh graph, append merge stats record

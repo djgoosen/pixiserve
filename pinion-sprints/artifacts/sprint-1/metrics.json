@@ -1,0 +1,89 @@
+{
+  "sprint_id": "sprint-1",
+  "closed_at": "2026-03-24T12:39:32Z",
+  "totals": {
+    "lines_added": 5250,
+    "net_lines": -55453,
+    "estimated_tokens": 1273
+  },
+  "units": [
+    {
+      "id": "PIN-010",
+      "lines_added": 1043,
+      "net_lines": -11143,
+      "estimated_tokens": 177,
+      "recorded_at": "2026-03-24T12:33:52Z"
+    },
+    {
+      "id": "PIN-009",
+      "lines_added": 1018,
+      "net_lines": -11193,
+      "estimated_tokens": 185,
+      "recorded_at": "2026-03-24T12:12:28Z"
+    },
+    {
+      "id": "PIN-007",
+      "lines_added": 1018,
+      "net_lines": -11193,
+      "estimated_tokens": 176,
+      "recorded_at": "2026-03-24T12:11:43Z"
+    },
+    {
+      "id": "PIN-006",
+      "lines_added": 1009,
+      "net_lines": -11213,
+      "estimated_tokens": 176,
+      "recorded_at": "2026-03-24T03:15:24Z"
+    },
+    {
+      "id": "PIN-002",
+      "lines_added": null,
+      "net_lines": null,
+      "estimated_tokens": null,
+      "recorded_at": "2026-03-24T03:00:00Z"
+    },
+    {
+      "id": "PIN-005",
+      "lines_added": 432,
+      "net_lines": -3532,
+      "estimated_tokens": 182,
+      "recorded_at": "2026-03-24T02:51:44Z"
+    },
+    {
+      "id": "PIN-004",
+      "lines_added": 383,
+      "net_lines": -3580,
+      "estimated_tokens": 189,
+      "recorded_at": "2026-03-24T02:42:47Z"
+    },
+    {
+      "id": "PIN-003",
+      "lines_added": 347,
+      "net_lines": -3599,
+      "estimated_tokens": 188,
+      "recorded_at": "2026-03-24T02:38:27Z"
+    },
+    {
+      "id": "PIN-001",
+      "lines_added": null,
+      "net_lines": null,
+      "estimated_tokens": null,
+      "recorded_at": "2026-03-24T02:30:00Z"
+    },
+    {
+      "id": "PIN-008",
+      "lines_added": null,
+      "net_lines": null,
+      "estimated_tokens": null,
+      "recorded_at": "2026-03-24T00:00:00Z"
+    }
+  ],
+  "artifacts": {
+    "bundle": "pinion/sprints/artifacts/sprint-1/",
+    "task_md": "pinion/sprints/artifacts/sprint-1/task.md",
+    "execution_log_md": "pinion/sprints/artifacts/sprint-1/execution_log.md",
+    "metrics_json": "pinion/sprints/artifacts/sprint-1/metrics.json",
+    "commits_dir": "pinion/sprints/artifacts/sprint-1/commits/",
+    "commits_git_log": "pinion/sprints/artifacts/sprint-1/commits/git-log.txt"
+  }
+}
