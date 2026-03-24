@@ -112,6 +112,17 @@ npm run start
 - **API / sync** — Axios uses `getToken()` from **`ClerkApiBridge`** so background sync and uploads send **`Authorization: Bearer …`**. After Clerk **sign-out**, requests no longer receive a session token.
 - **`npm install`** — The repo includes **`mobile/.npmrc`** with `legacy-peer-deps=true` so `@clerk/clerk-expo` resolves cleanly on Expo SDK 50 + React 18.
 
+#### Android usage
+
+- **Provider support** — Android uses Clerk OAuth via `expo-web-browser` (Chrome Custom Tabs). **Google** sign-in is supported; Apple sign-in remains iOS-only.
+- **First-run flow** — Open app -> set API base URL -> sign in with Google -> app routes to tabs after session is active.
+- **API base URL choices**
+  - **Physical Android device (same LAN as API):** `http://<your-lan-ip>:8000`
+  - **Android emulator:** `http://10.0.2.2:8000`
+  - **USB fallback:** `adb reverse tcp:8000 tcp:8000` then use `http://127.0.0.1:8000`
+- **Clerk redirect config** — Ensure Clerk dashboard allows your native redirect URI for the Expo scheme (`pixiserve://oauth-native`) and allowed origins are configured for your dev setup.
+- **Authenticated media + sync** — Gallery file loads (`/api/v1/assets/{id}/file?token=...`) and background sync both use Clerk session tokens from `getToken()`, so Android behavior matches web auth/session semantics.
+
 ### API Documentation
 
 Once running, visit:
