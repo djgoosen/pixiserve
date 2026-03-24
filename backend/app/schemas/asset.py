@@ -11,6 +11,7 @@ class AssetResponse(BaseModel):
     original_filename: str | None
     storage_path: str
     thumb_path: str | None
+    preview_path: str | None
     file_size_bytes: int
     mime_type: str
     asset_type: str

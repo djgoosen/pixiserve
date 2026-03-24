@@ -22,6 +22,46 @@ from app.workers.tasks.geocoding import reverse_geocode
 logger = logging.getLogger(__name__)
 
 
+def apply_processing_results_to_asset(asset, processing_results: dict) -> None:
+    """
+    Apply extracted metadata/thumbnail results to an asset object.
+
+    Designed to be deterministic and idempotent so retries do not corrupt fields.
+    """
+    exif = processing_results.get("exif", {})
+    if exif.get("captured_at"):
+        try:
+            asset.captured_at = datetime.fromisoformat(exif["captured_at"])
+        except ValueError:
+            pass
+
+    if exif.get("latitude"):
+        asset.latitude = exif["latitude"]
+    if exif.get("longitude"):
+        asset.longitude = exif["longitude"]
+    if exif.get("width"):
+        asset.width = exif["width"]
+    if exif.get("height"):
+        asset.height = exif["height"]
+    if exif.get("duration_seconds"):
+        asset.duration_seconds = exif["duration_seconds"]
+
+    # Store raw EXIF
+    if exif.get("raw"):
+        asset.exif_data = exif["raw"]
+
+    # Update thumbnail paths
+    thumbnails = processing_results.get("thumbnails", {})
+    if thumbnails.get("thumb"):
+        asset.thumb_path = thumbnails["thumb"]
+    if thumbnails.get("preview"):
+        asset.preview_path = thumbnails["preview"]
+
+    # Update dimensions from thumbnail generation if not from EXIF
+    if not asset.width and processing_results.get("original_size"):
+        asset.width, asset.height = processing_results["original_size"]
+
+
 @shared_task(bind=True)
 def process_asset(
     self,
@@ -50,12 +90,16 @@ def process_asset(
 
     try:
         if asset_type == "video":
-            # Video processing chain
-            # 1. Extract video metadata
-            # 2. Generate video thumbnail
+            # Video processing chain:
+            # 1. Extract metadata and generate thumbnails in parallel
+            # 2. Merge results
+            # 3. Update asset record
             workflow = chain(
-                extract_video_metadata.s(asset_id, storage_path),
-                generate_video_thumbnail.s(asset_id, storage_path),
+                group(
+                    extract_video_metadata.s(asset_id, storage_path),
+                    generate_video_thumbnail.s(asset_id, storage_path),
+                ),
+                process_extraction_results.s(asset_id),
                 update_asset_metadata.s(asset_id),
             )
         else:
@@ -178,39 +222,7 @@ def update_asset_metadata(processing_results: dict, asset_id: str) -> dict:
                 logger.error(f"Asset {asset_id} not found")
                 return {"error": "Asset not found"}
 
-            # Update from EXIF
-            exif = processing_results.get("exif", {})
-            if exif.get("captured_at"):
-                try:
-                    asset.captured_at = datetime.fromisoformat(exif["captured_at"])
-                except ValueError:
-                    pass
-
-            if exif.get("latitude"):
-                asset.latitude = exif["latitude"]
-            if exif.get("longitude"):
-                asset.longitude = exif["longitude"]
-            if exif.get("width"):
-                asset.width = exif["width"]
-            if exif.get("height"):
-                asset.height = exif["height"]
-            if exif.get("duration_seconds"):
-                asset.duration_seconds = exif["duration_seconds"]
-
-            # Store raw EXIF
-            if exif.get("raw"):
-                asset.exif_data = exif["raw"]
-
-            # Update thumbnail paths
-            thumbnails = processing_results.get("thumbnails", {})
-            if thumbnails.get("thumb"):
-                asset.thumb_path = thumbnails["thumb"]
-            if thumbnails.get("preview"):
-                asset.preview_path = thumbnails["preview"]
-
-            # Update dimensions from thumbnail generation if not from EXIF
-            if not asset.width and processing_results.get("original_size"):
-                asset.width, asset.height = processing_results["original_size"]
+            apply_processing_results_to_asset(asset, processing_results)
 
             # Mark ML processing complete
             asset.ml_processed_at = datetime.now(timezone.utc)

@@ -14,6 +14,7 @@ export interface Asset {
   original_filename: string | null
   storage_path: string
   thumb_path: string | null
+  preview_path: string | null
   file_size_bytes: number
   mime_type: string
   asset_type: 'image' | 'video'
