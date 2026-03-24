@@ -1,26 +1,29 @@
 /**
- * Root layout for Expo Router.
+ * Root layout: Clerk session + Expo Router stack.
  */
 
+import { ClerkProvider } from '@clerk/clerk-expo';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import { useAuthStore } from '../src/stores/authStore';
+import * as SecureStore from 'expo-secure-store';
+import { ClerkApiBridge } from '../src/components/ClerkApiBridge';
+
+const tokenCache = {
+  async getToken(key: string) {
+    return SecureStore.getItemAsync(key);
+  },
+  async saveToken(key: string, value: string) {
+    await SecureStore.setItemAsync(key, value);
+  },
+};
+
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? '';
 
 export default function RootLayout() {
-  const { loadToken, isLoading, isAuthenticated } = useAuthStore();
-
-  useEffect(() => {
-    loadToken();
-  }, []);
-
-  if (isLoading) {
-    return null; // Or splash screen
-  }
-
   return (
-    <>
+    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <StatusBar style="light" />
+      <ClerkApiBridge />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: '#1a1a2e' },
@@ -28,20 +31,12 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: '#0f0f1a' },
         }}
       >
-        {isAuthenticated ? (
-          <>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="asset/[id]" options={{ title: 'Photo' }} />
-            <Stack.Screen name="album/[id]" options={{ title: 'Album' }} />
-            <Stack.Screen name="person/[id]" options={{ title: 'Person' }} />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="setup" options={{ title: 'Server Setup' }} />
-          </>
-        )}
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="setup" options={{ title: 'Server setup' }} />
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="asset/[id]" />
       </Stack>
-    </>
+    </ClerkProvider>
   );
 }

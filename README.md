@@ -95,6 +95,23 @@ npm run dev
 - **Gallery images** — `GET /assets/{id}/file` accepts the same JWT in the **`token`** query param (for `<img src>`), or `Authorization` (for programmatic requests).
 - **CORS** — Ensure **`ALLOWED_ORIGINS`** on the API includes the web dev origin (e.g. `http://localhost:3000`) and that Clerk dashboard allowed origins / redirect URLs match.
 
+### Mobile app (Expo)
+
+```bash
+cd mobile
+npm install
+cp .env.example .env
+# Set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY (same publishable key as web/backend)
+
+npm run start
+```
+
+- **`EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`** — Required for Clerk. Session tokens are cached with **`expo-secure-store`** via `ClerkProvider` `tokenCache`.
+- **Server URL** — On first launch, enter the API base URL (e.g. `http://192.168.x.x:8000` for a device on your LAN). Stored locally; not the Clerk secret.
+- **Sign-in** — **Google** and **Apple** (iOS only) use Clerk **`useSSO`** + `expo-web-browser`. Enable the providers and add the redirect URL Clerk shows for your app scheme (`pixiserve://oauth-native` from `Linking.createURL`).
+- **API / sync** — Axios uses `getToken()` from **`ClerkApiBridge`** so background sync and uploads send **`Authorization: Bearer …`**. After Clerk **sign-out**, requests no longer receive a session token.
+- **`npm install`** — The repo includes **`mobile/.npmrc`** with `legacy-peer-deps=true` so `@clerk/clerk-expo` resolves cleanly on Expo SDK 50 + React 18.
+
 ### API Documentation
 
 Once running, visit:

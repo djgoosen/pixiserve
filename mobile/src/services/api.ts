@@ -1,14 +1,11 @@
 /**
- * API client for mobile app.
+ * API client for mobile app (Clerk Bearer + optional server URL).
  */
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import { getClerkTokenForApi, signOutViaApiBridge } from './clerkApiBridge';
 import { useAuthStore } from '../stores/authStore';
 
-const TOKEN_KEY = 'pixiserve_token';
-
-// Create axios instance
 export const api = axios.create({
   timeout: 30000,
   headers: {
@@ -16,7 +13,6 @@ export const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token and base URL
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     const { serverUrl } = useAuthStore.getState();
@@ -25,7 +21,7 @@ api.interceptors.request.use(
       config.baseURL = `${serverUrl}/api/v1`;
     }
 
-    const token = await SecureStore.getItemAsync(TOKEN_KEY);
+    const token = await getClerkTokenForApi();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -35,46 +31,16 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      const { logout } = useAuthStore.getState();
-      await logout();
+      await signOutViaApiBridge();
     }
 
     return Promise.reject(error);
   }
 );
-
-// Auth API
-export const authApi = {
-  login: async (username: string, password: string) => {
-    const response = await api.post<{ access_token: string; token_type: string }>(
-      '/auth/login',
-      new URLSearchParams({ username, password }),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
-    return response.data;
-  },
-
-  register: async (username: string, email: string, password: string) => {
-    const response = await api.post<{ id: string; username: string; email: string }>(
-      '/auth/register',
-      { username, email, password }
-    );
-    return response.data;
-  },
-
-  getMe: async () => {
-    const response = await api.get<{ id: string; username: string; email: string }>(
-      '/auth/me'
-    );
-    return response.data;
-  },
-};
 
 // Assets API
 export const assetsApi = {

@@ -11,6 +11,7 @@
 
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
+import * as Crypto from 'expo-crypto';
 import NetInfo from '@react-native-community/netinfo';
 import { api } from './api';
 import { useSyncStore } from '../stores/syncStore';
@@ -32,20 +33,11 @@ async function computeFileHash(uri: string): Promise<string> {
     throw new Error('File not found');
   }
 
-  // Use expo-crypto or native module for proper SHA256
-  // This is a simplified version - in production, use a native module
   const content = await FileSystem.readAsStringAsync(uri, {
     encoding: FileSystem.EncodingType.Base64,
   });
 
-  // Simple hash simulation - replace with actual SHA256
-  const crypto = await import('expo-crypto');
-  const hash = await crypto.digestStringAsync(
-    crypto.CryptoDigestAlgorithm.SHA256,
-    content
-  );
-
-  return hash;
+  return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, content);
 }
 
 /**

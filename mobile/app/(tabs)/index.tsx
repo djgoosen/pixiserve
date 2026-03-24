@@ -4,6 +4,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  Dimensions,
   FlatList,
   Image,
   Pressable,
@@ -11,11 +13,10 @@ import {
   StyleSheet,
   Text,
   View,
-  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { assetsApi } from '../../src/services/api';
-import { useAuthStore } from '../../src/stores/authStore';
+import { useSignedAssetFileUrl } from '../../src/hooks/useSignedAssetFileUrl';
 
 interface Asset {
   id: string;
@@ -28,9 +29,24 @@ const COLUMN_COUNT = 3;
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const ITEM_SIZE = SCREEN_WIDTH / COLUMN_COUNT - 2;
 
+function GridThumb({ asset, onPress }: { asset: Asset; onPress: () => void }) {
+  const uri = useSignedAssetFileUrl(asset.id);
+
+  return (
+    <Pressable style={styles.item} onPress={onPress}>
+      {uri ? (
+        <Image source={{ uri }} style={styles.image} />
+      ) : (
+        <View style={[styles.image, styles.placeholder]}>
+          <ActivityIndicator color="#6b7280" />
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
 export default function PhotosScreen() {
   const router = useRouter();
-  const { serverUrl } = useAuthStore();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -73,27 +89,10 @@ export default function PhotosScreen() {
   }, [loading, hasMore, page, loadAssets]);
 
   const renderItem = useCallback(
-    ({ item }: { item: Asset }) => {
-      const thumbUrl = item.thumb_path
-        ? `${serverUrl}/api/v1/assets/${item.id}/thumbnail`
-        : null;
-
-      return (
-        <Pressable
-          style={styles.item}
-          onPress={() => router.push(`/asset/${item.id}`)}
-        >
-          {thumbUrl ? (
-            <Image source={{ uri: thumbUrl }} style={styles.image} />
-          ) : (
-            <View style={[styles.image, styles.placeholder]}>
-              <Text style={styles.placeholderText}>No thumbnail</Text>
-            </View>
-          )}
-        </Pressable>
-      );
-    },
-    [serverUrl, router]
+    ({ item }: { item: Asset }) => (
+      <GridThumb asset={item} onPress={() => router.push(`/asset/${item.id}`)} />
+    ),
+    [router]
   );
 
   if (loading && assets.length === 0) {
@@ -148,10 +147,6 @@ const styles = StyleSheet.create({
   placeholder: {
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  placeholderText: {
-    color: '#6b7280',
-    fontSize: 10,
   },
   centered: {
     flex: 1,

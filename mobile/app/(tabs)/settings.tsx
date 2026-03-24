@@ -13,12 +13,15 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useClerk, useUser } from '@clerk/clerk-expo';
 import { useAuthStore } from '../../src/stores/authStore';
 import { useSyncStore, SyncStatus } from '../../src/stores/syncStore';
 import { syncPhotos } from '../../src/services/syncService';
 
 export default function SettingsScreen() {
-  const { user, serverUrl, logout } = useAuthStore();
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  const { serverUrl } = useAuthStore();
   const { status, progress, settings, lastSyncAt, updateSettings } = useSyncStore();
   const [syncing, setSyncing] = useState(false);
 
@@ -33,9 +36,13 @@ export default function SettingsScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
+    Alert.alert('Sign out', 'Sign out of your account on this device?', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', style: 'destructive', onPress: logout },
+      {
+        text: 'Sign out',
+        style: 'destructive',
+        onPress: () => signOut(),
+      },
     ]);
   };
 
@@ -56,8 +63,12 @@ export default function SettingsScreen() {
           <View style={styles.row}>
             <Ionicons name="person" size={24} color="#6366f1" />
             <View style={styles.rowContent}>
-              <Text style={styles.label}>{user?.username}</Text>
-              <Text style={styles.sublabel}>{user?.email}</Text>
+              <Text style={styles.label}>
+                {user?.username || user?.primaryEmailAddress?.emailAddress || 'Account'}
+              </Text>
+              <Text style={styles.sublabel}>
+                {user?.primaryEmailAddress?.emailAddress ?? ''}
+              </Text>
             </View>
           </View>
           <View style={styles.divider} />
@@ -179,11 +190,11 @@ export default function SettingsScreen() {
         </View>
       </View>
 
-      {/* Logout */}
+      {/* Sign out (Clerk) */}
       <View style={styles.section}>
         <Pressable style={styles.logoutButton} onPress={handleLogout}>
           <Ionicons name="log-out" size={20} color="#ef4444" />
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.logoutText}>Sign out</Text>
         </Pressable>
       </View>
 
