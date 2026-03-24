@@ -61,6 +61,12 @@ class SearchResponse(BaseModel):
     facets: dict | None = None
 
 
+def _is_postgres(db: AsyncSession) -> bool:
+    bind = getattr(db, "bind", None)
+    dialect = getattr(bind, "dialect", None)
+    return getattr(dialect, "name", None) == "postgresql"
+
+
 @router.post("", response_model=SearchResponse)
 async def search_assets(
     request: SearchRequest,
@@ -81,6 +87,7 @@ async def search_assets(
     )
 
     # Text search (filename, city, country)
+    rank_expr = None
     if request.query:
         search_term = f"%{request.query.lower()}%"
         query = query.where(
@@ -90,6 +97,13 @@ async def search_assets(
                 func.lower(Asset.country).like(search_term),
             )
         )
+        if _is_postgres(db):
+            q = request.query.lower()
+            rank_expr = func.greatest(
+                func.similarity(func.lower(func.coalesce(Asset.original_filename, "")), q),
+                func.similarity(func.lower(func.coalesce(Asset.city, "")), q),
+                func.similarity(func.lower(func.coalesce(Asset.country, "")), q),
+            )
 
     # Asset type filter
     if request.asset_type:
@@ -156,12 +170,15 @@ async def search_assets(
     total = await db.scalar(count_query)
 
     # Paginate and order
-    query = (
-        query
-        .order_by(Asset.captured_at.desc().nullslast(), Asset.created_at.desc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-    )
+    if rank_expr is not None:
+        query = query.order_by(
+            rank_expr.desc(),
+            Asset.captured_at.desc().nullslast(),
+            Asset.created_at.desc(),
+        )
+    else:
+        query = query.order_by(Asset.captured_at.desc().nullslast(), Asset.created_at.desc())
+    query = query.offset((page - 1) * page_size).limit(page_size)
 
     result = await db.execute(query)
     assets = result.scalars().all()
