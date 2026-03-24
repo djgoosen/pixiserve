@@ -4,7 +4,7 @@ Self-hosted Google Photos replacement with ML-powered organization.
 
 ## Features (Planned)
 
-- Local username/password authentication
+- Clerk authentication (session JWTs verified on the API via JWKS)
 - Photo & video upload with SHA256 deduplication
 - Face recognition and clustering
 - Object and scene detection
@@ -25,7 +25,7 @@ Self-hosted Google Photos replacement with ML-powered organization.
    ```bash
    cd deploy
    cp .env.example .env
-   # Edit .env - set SECRET_KEY and POSTGRES_PASSWORD
+   # Edit .env — set SECRET_KEY, POSTGRES_PASSWORD, CLERK_SECRET_KEY, CLERK_PUBLISHABLE_KEY
    ```
 
 3. Start services:
@@ -38,45 +38,18 @@ Self-hosted Google Photos replacement with ML-powered organization.
    docker compose exec api alembic upgrade head
    ```
 
-5. Register your admin account:
-   ```bash
-   curl -X POST http://localhost:8000/api/v1/auth/register \
-     -H "Content-Type: application/json" \
-     -d '{"username": "admin", "email": "admin@example.com", "password": "your-password"}'
-   ```
+5. After [Clerk](https://clerk.com) is configured, sign in via the web or mobile app. The API expects a **Clerk session JWT** on protected routes. Each user row must have `clerk_user_id` set (via Clerk webhook sync — see sprint backlog) before `/api/v1/auth/me` and other protected endpoints succeed.
 
-   The first registered user automatically becomes admin.
+6. Legacy `POST /api/v1/auth/register` and `/login` may still exist for migration tooling but **protected routes** authenticate with Clerk only.
 
-6. (Optional) Disable registration in `.env`:
-   ```
-   ALLOW_REGISTRATION=false
-   ```
+## API authentication (Clerk)
 
-## API Authentication
+- **CLERK_SECRET_KEY** — Backend API secret from the Clerk dashboard (required at API startup).
+- **CLERK_PUBLISHABLE_KEY** — Publishable key for the React / Expo Clerk SDKs (required at startup so deploys are documented consistently; not used to verify Bearer tokens).
+- **Bearer tokens** — The API validates `Authorization: Bearer <session_jwt>` with **RS256** using Clerk’s JWKS URL derived from the JWT `iss` claim: `{iss}/.well-known/jwks.json`.
+- **Local user** — The JWT `sub` (Clerk user id) must match `users.clerk_user_id` in the database.
 
-### Register
-```bash
-POST /api/v1/auth/register
-{
-  "username": "myuser",
-  "email": "user@example.com",
-  "password": "securepassword"
-}
-```
-
-### Login
-```bash
-POST /api/v1/auth/login
-{
-  "username": "myuser",  # or email
-  "password": "securepassword"
-}
-```
-
-Returns a JWT token to use in subsequent requests:
-```
-Authorization: Bearer <token>
-```
+Health checks **`/health`**, **`/api/v1/health`**, and **`/api/v1/health/ready`** stay unauthenticated.
 
 ## Development
 
@@ -115,7 +88,7 @@ See `/architecture` for detailed system design:
 
 - **Backend:** Python, FastAPI, SQLAlchemy, Celery
 - **Database:** PostgreSQL, Redis
-- **Auth:** Local username/password with bcrypt + JWT
+- **Auth:** Clerk session JWTs (JWKS), bcrypt for share-link passwords
 - **Storage:** Local filesystem or S3-compatible
 
 ## License

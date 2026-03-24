@@ -130,6 +130,13 @@ async def get_user_by_id(db: AsyncSession, user_id: UUID) -> User | None:
     return result.scalar_one_or_none()
 
 
+async def get_user_by_clerk_user_id(db: AsyncSession, clerk_user_id: str) -> User | None:
+    """Get user by Clerk user id (`sub` on Clerk session JWT)."""
+    stmt = select(User).where(User.clerk_user_id == clerk_user_id)
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()
+
+
 async def change_password(
     db: AsyncSession,
     user: User,

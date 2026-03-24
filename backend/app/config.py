@@ -15,6 +15,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        env_nested_delimiter="__",
     )
 
     # Application
@@ -48,6 +49,10 @@ class Settings(BaseSettings):
 
     # Registration
     allow_registration: bool = True  # Set to False after creating admin
+
+    # Clerk (session JWT verification on the API; publishable key is for frontends)
+    clerk_secret_key: str = ""
+    clerk_publishable_key: str = ""
 
     def model_post_init(self, __context) -> None:
         """Generate secret key if not provided."""

@@ -10,7 +10,16 @@ from app.database import engine
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
+    settings = get_settings()
+    if not settings.clerk_secret_key.strip():
+        raise RuntimeError(
+            "CLERK_SECRET_KEY is required. Set it in the environment (see README and deploy/.env.example)."
+        )
+    if not settings.clerk_publishable_key.strip():
+        raise RuntimeError(
+            "CLERK_PUBLISHABLE_KEY is required for documented deploys "
+            "(used by web/mobile Clerk SDKs; the API validates session JWTs via JWKS)."
+        )
     yield
     # Shutdown
     await engine.dispose()

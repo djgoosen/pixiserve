@@ -6,7 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.user import User
-from app.services.auth_service import decode_access_token, get_user_by_id
+from app.services.auth_service import get_user_by_clerk_user_id
+from app.services.clerk_jwt import ClerkJWTError, verify_clerk_session_token
 
 security = HTTPBearer()
 
@@ -16,16 +17,17 @@ async def get_current_user(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
     token = credentials.credentials
-    user_id = decode_access_token(token)
-
-    if user_id is None:
+    try:
+        claims = verify_clerk_session_token(token)
+    except ClerkJWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from None
 
-    user = await get_user_by_id(db, user_id)
+    clerk_user_id = claims["sub"]
+    user = await get_user_by_clerk_user_id(db, clerk_user_id)
 
     if user is None:
         raise HTTPException(
