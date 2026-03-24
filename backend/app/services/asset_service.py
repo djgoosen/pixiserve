@@ -1,7 +1,7 @@
 import mimetypes
 from datetime import datetime
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import UUID
 
 from fastapi import UploadFile
 from sqlalchemy import func, select
@@ -35,6 +35,10 @@ ALLOWED_VIDEO_TYPES = {
 }
 
 ALLOWED_TYPES = ALLOWED_IMAGE_TYPES | ALLOWED_VIDEO_TYPES
+
+
+class QuotaExceededError(ValueError):
+    """Raised when an upload would exceed a user's configured storage quota."""
 
 
 def get_asset_type(mime_type: str) -> str:
@@ -100,6 +104,17 @@ async def create_asset(
 
     await file.seek(0)
     content = await file.read()
+    content_size = len(content)
+
+    # Null/zero quota means unlimited storage. Enforce only positive quotas.
+    quota = user.storage_quota_bytes
+    if quota and quota > 0:
+        projected_usage = user.storage_used_bytes + content_size
+        if projected_usage > quota:
+            raise QuotaExceededError(
+                f"Storage quota exceeded: {user.storage_used_bytes}/{quota} bytes used"
+            )
+
     await storage.write(storage_path, content)
 
     # Create asset record
@@ -108,7 +123,7 @@ async def create_asset(
         file_hash_sha256=file_hash,
         original_filename=file.filename,
         storage_path=storage_path,
-        file_size_bytes=len(content),
+        file_size_bytes=content_size,
         mime_type=mime_type,
         asset_type=get_asset_type(mime_type),
     )
@@ -116,7 +131,7 @@ async def create_asset(
     db.add(asset)
 
     # Update user's storage usage
-    user.storage_used_bytes += len(content)
+    user.storage_used_bytes += content_size
 
     await db.commit()
     await db.refresh(asset)

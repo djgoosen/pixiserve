@@ -37,8 +37,11 @@ async def upload_asset(
             file=file,
         )
     except ValueError as e:
+        status_code = status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+        if not isinstance(e, asset_service.QuotaExceededError):
+            status_code = status.HTTP_400_BAD_REQUEST
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status_code,
             detail=str(e),
         )
 
