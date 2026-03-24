@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { Heart, Play } from 'lucide-react'
 import { clsx } from 'clsx'
 import type { Asset } from '@/types'
-import { getAssetFileUrl } from '@/api/assets'
-import { useAuthStore } from '@/stores/authStore'
+import { useMediaUrl } from '@/hooks/useMediaUrl'
 
 interface PhotoCardProps {
   asset: Asset
@@ -15,9 +14,7 @@ interface PhotoCardProps {
 export function PhotoCard({ asset, onClick, isSelected, onSelect }: PhotoCardProps) {
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState(false)
-  const token = useAuthStore((s) => s.token)
-
-  const imageUrl = `${getAssetFileUrl(asset.id)}?token=${token}`
+  const imageUrl = useMediaUrl(asset.id)
 
   return (
     <div
@@ -27,7 +24,7 @@ export function PhotoCard({ asset, onClick, isSelected, onSelect }: PhotoCardPro
       )}
       onClick={onClick}
     >
-      {!error ? (
+      {!error && imageUrl ? (
         <img
           src={imageUrl}
           alt={asset.original_filename || 'Photo'}
@@ -39,13 +36,17 @@ export function PhotoCard({ asset, onClick, isSelected, onSelect }: PhotoCardPro
           onError={() => setError(true)}
           loading="lazy"
         />
+      ) : !imageUrl && !error ? (
+        <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <span className="text-sm">Loading…</span>
+        </div>
       ) : (
         <div className="w-full h-full flex items-center justify-center text-gray-400">
           <span className="text-sm">Failed to load</span>
         </div>
       )}
 
-      {!loaded && !error && (
+      {!loaded && !error && imageUrl && (
         <div className="absolute inset-0 bg-gray-200 animate-pulse" />
       )}
 

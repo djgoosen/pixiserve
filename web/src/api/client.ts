@@ -1,5 +1,5 @@
 import axios, { AxiosError, type AxiosInstance } from 'axios'
-import { useAuthStore } from '@/stores/authStore'
+import { clerkSignOutAndRedirect, getClerkTokenForApi } from '@/api/authBridge'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1'
 
@@ -10,22 +10,19 @@ export const apiClient: AxiosInstance = axios.create({
   },
 })
 
-// Add auth token to requests
-apiClient.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token
+apiClient.interceptors.request.use(async (config) => {
+  const token = await getClerkTokenForApi()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
   return config
 })
 
-// Handle 401 responses
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     if (error.response?.status === 401) {
-      useAuthStore.getState().logout()
-      window.location.href = '/login'
+      await clerkSignOutAndRedirect()
     }
     return Promise.reject(error)
   }

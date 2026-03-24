@@ -1,20 +1,15 @@
 import { Link } from 'react-router-dom'
-import { Upload, LogOut, User, Image } from 'lucide-react'
-import { useAuthStore } from '@/stores/authStore'
+import { Upload, Image } from 'lucide-react'
+import { UserButton } from '@clerk/clerk-react'
 import { useUploadStore } from '@/stores/uploadStore'
 import { Button } from '@/components/ui'
 
 export function Header() {
-  const { user, logout } = useAuthStore()
   const { setShowPanel, uploads } = useUploadStore()
 
   const pendingUploads = uploads.filter(
     (u) => u.status === 'pending' || u.status === 'uploading'
   ).length
-
-  const handleLogout = () => {
-    logout()
-  }
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
@@ -40,14 +35,8 @@ export function Header() {
             )}
           </Button>
 
-          <div className="flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <User className="w-4 h-4" />
-              <span className="hidden md:inline">{user?.username}</span>
-            </div>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
-              <LogOut className="w-4 h-4" />
-            </Button>
+          <div className="flex items-center gap-2 ml-4 pl-4 border-l border-gray-200">
+            <UserButton afterSignOutUrl="/login" />
           </div>
         </div>
       </div>

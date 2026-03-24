@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, 
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, MediaUser
 from app.database import get_db
 from app.schemas.asset import AssetListResponse, AssetResponse, AssetUploadResponse
 from app.services import asset_service
@@ -110,11 +110,11 @@ async def get_asset(
 @router.get("/{asset_id}/file")
 async def get_asset_file(
     asset_id: UUID,
-    current_user: CurrentUser,
+    current_user: MediaUser,
     db: Annotated[AsyncSession, Depends(get_db)],
     storage: Annotated[StorageBackend, Depends(get_storage_dep)],
 ):
-    """Stream the original file."""
+    """Stream the original file (Bearer or ``token`` query for media elements)."""
     asset = await asset_service.get_asset_by_id(db, current_user.id, asset_id)
     if not asset:
         raise HTTPException(

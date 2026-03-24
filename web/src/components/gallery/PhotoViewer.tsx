@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useAuth } from '@clerk/clerk-react'
 import { format } from 'date-fns'
 import {
   ChevronLeft,
@@ -14,8 +15,8 @@ import {
 } from 'lucide-react'
 import { Modal, Button } from '@/components/ui'
 import { useGalleryStore } from '@/stores/galleryStore'
-import { useAuthStore } from '@/stores/authStore'
 import { getAssetFileUrl, toggleFavorite, deleteAsset } from '@/api/assets'
+import { useMediaUrl } from '@/hooks/useMediaUrl'
 import type { Asset } from '@/types'
 
 function formatFileSize(bytes: number): string {
@@ -28,7 +29,8 @@ function formatFileSize(bytes: number): string {
 export function PhotoViewer() {
   const { viewerOpen, selectedAsset, closeViewer, assets, updateAsset, removeAsset } =
     useGalleryStore()
-  const token = useAuthStore((s) => s.token)
+  const { getToken } = useAuth()
+  const imageUrl = useMediaUrl(selectedAsset?.id ?? null)
   const [showInfo, setShowInfo] = useState(false)
   const [loading, setLoading] = useState(false)
 
@@ -81,8 +83,10 @@ export function PhotoViewer() {
     }
   }
 
-  const handleDownload = () => {
-    const url = `${getAssetFileUrl(selectedAsset.id)}?token=${token}`
+  const handleDownload = async () => {
+    const t = await getToken()
+    if (!t) return
+    const url = `${getAssetFileUrl(selectedAsset.id)}?token=${encodeURIComponent(t)}`
     const link = document.createElement('a')
     link.href = url
     link.download = selectedAsset.original_filename || 'download'
@@ -90,8 +94,6 @@ export function PhotoViewer() {
     link.click()
     document.body.removeChild(link)
   }
-
-  const imageUrl = `${getAssetFileUrl(selectedAsset.id)}?token=${token}`
 
   return (
     <Modal
@@ -156,7 +158,9 @@ export function PhotoViewer() {
 
         {/* Main image */}
         <div className="flex-1 flex items-center justify-center p-4">
-          {selectedAsset.asset_type === 'video' ? (
+          {!imageUrl ? (
+            <p className="text-white/80">Loading…</p>
+          ) : selectedAsset.asset_type === 'video' ? (
             <video
               src={imageUrl}
               controls

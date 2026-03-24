@@ -79,6 +79,22 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
+### Web app (Vite + React)
+
+```bash
+cd web
+npm install
+cp .env.example .env
+# Set VITE_CLERK_PUBLISHABLE_KEY to the same publishable key as CLERK_PUBLISHABLE_KEY
+
+npm run dev
+```
+
+- **`VITE_CLERK_PUBLISHABLE_KEY`** — Required for Clerk `<SignIn>` / `<SignUp>` / session tokens. Never put **`CLERK_SECRET_KEY`** in the web bundle.
+- **API calls** — Axios reads the Clerk session JWT via `getToken()` and sends `Authorization: Bearer …`.
+- **Gallery images** — `GET /assets/{id}/file` accepts the same JWT in the **`token`** query param (for `<img src>`), or `Authorization` (for programmatic requests).
+- **CORS** — Ensure **`ALLOWED_ORIGINS`** on the API includes the web dev origin (e.g. `http://localhost:3000`) and that Clerk dashboard allowed origins / redirect URLs match.
+
 ### API Documentation
 
 Once running, visit:

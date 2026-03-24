@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,13 +10,10 @@ from app.services.auth_service import get_user_by_clerk_user_id
 from app.services.clerk_jwt import ClerkJWTError, verify_clerk_session_token
 
 security = HTTPBearer()
+optional_bearer = HTTPBearer(auto_error=False)
 
 
-async def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
-    db: Annotated[AsyncSession, Depends(get_db)],
-) -> User:
-    token = credentials.credentials
+async def _user_from_clerk_session_token(db: AsyncSession, token: str) -> User:
     try:
         claims = verify_clerk_session_token(token)
     except ClerkJWTError:
@@ -45,4 +42,36 @@ async def get_current_user(
     return user
 
 
+async def get_current_user(
+    credentials: Annotated[HTTPAuthorizationCredentials, Depends(security)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> User:
+    return await _user_from_clerk_session_token(db, credentials.credentials)
+
+
+async def get_current_user_media(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(optional_bearer),
+    ],
+    token: Annotated[
+        str | None,
+        Query(
+            None,
+            description="Clerk session JWT for <img>/<video> src (no Authorization header).",
+        ),
+    ],
+) -> User:
+    raw = (token or "").strip() or (credentials.credentials if credentials else None) or ""
+    if not raw:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return await _user_from_clerk_session_token(db, raw)
+
+
 CurrentUser = Annotated[User, Depends(get_current_user)]
+MediaUser = Annotated[User, Depends(get_current_user_media)]
