@@ -51,6 +51,12 @@ Self-hosted Google Photos replacement with ML-powered organization.
 
 Health checks **`/health`**, **`/api/v1/health`**, and **`/api/v1/health/ready`** stay unauthenticated.
 
+### Clerk webhooks
+
+- **Endpoint:** `POST /api/v1/webhooks/clerk`
+- **Signing:** Svix headers `svix-id`, `svix-timestamp`, `svix-signature` (verified with **`CLERK_WEBHOOK_SECRET`**).
+- **Handled types:** `user.created`, `user.updated` (idempotent upsert by Clerk user id → `users.clerk_user_id`).
+
 ## Development
 
 ### Backend (Python/FastAPI)

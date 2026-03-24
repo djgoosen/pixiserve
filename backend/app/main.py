@@ -20,6 +20,11 @@ async def lifespan(app: FastAPI):
             "CLERK_PUBLISHABLE_KEY is required for documented deploys "
             "(used by web/mobile Clerk SDKs; the API validates session JWTs via JWKS)."
         )
+    if not settings.clerk_webhook_secret.strip():
+        raise RuntimeError(
+            "CLERK_WEBHOOK_SECRET is required for Svix-signed Clerk webhooks "
+            "(see README and deploy/.env.example)."
+        )
     yield
     # Shutdown
     await engine.dispose()

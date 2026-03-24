@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1 import auth, assets, health, system, people, sync, albums, search, shared
+from app.api.v1 import auth, assets, health, system, people, sync, albums, search, shared, webhooks
 
 api_router = APIRouter()
 
@@ -13,3 +13,4 @@ api_router.include_router(sync.router, prefix="/sync", tags=["sync"])
 api_router.include_router(albums.router, prefix="/albums", tags=["albums"])
 api_router.include_router(search.router, prefix="/search", tags=["search"])
 api_router.include_router(shared.router, prefix="/shared", tags=["shared"])
+api_router.include_router(webhooks.router, prefix="/webhooks", tags=["webhooks"])

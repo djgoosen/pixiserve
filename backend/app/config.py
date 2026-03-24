@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     # Clerk (session JWT verification on the API; publishable key is for frontends)
     clerk_secret_key: str = ""
     clerk_publishable_key: str = ""
+    clerk_webhook_secret: str = ""  # Svix signing secret (whsec_...) from Clerk dashboard
 
     def model_post_init(self, __context) -> None:
         """Generate secret key if not provided."""
